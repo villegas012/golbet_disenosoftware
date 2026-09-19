@@ -1,1 +1,0 @@
-# golbet_disenosoftware
