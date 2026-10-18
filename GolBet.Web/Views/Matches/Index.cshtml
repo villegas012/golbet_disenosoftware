@@ -8,29 +8,70 @@
 
 @{
     var current = (MatchStatus?)ViewBag.CurrentStatus;
+    var search = (string?)ViewBag.CurrentSearch;
+
+    // Only carry the search in the filter links when there is actual text (avoids "?search=" in the URL)
+    var activeSearch = string.IsNullOrWhiteSpace(search) ? null : search;
 }
 
+@* Search form: GET, so the URL keeps the search (/Matches?search=nacional) and survives F5 / sharing *@
+<form asp-action="Index" method="get" class="d-flex gap-2 mb-3" role="search">
+    @if (current.HasValue)
+    {
+        @* Keeps the active status filter when searching *@
+        <input type="hidden" name="status" value="@current" />
+    }
+    <input type="search" name="search" value="@search" class="form-control"
+           placeholder="Buscar equipo (ej. Nacional)" aria-label="Buscar equipo" />
+    <button type="submit" class="btn btn-success">Buscar</button>
+</form>
+
 <div class="d-flex gap-2 flex-wrap mb-4">
-    <a asp-action="Index"
-           class="btn btn-sm @(current is null ? "btn-success" : "btn-outline-success")">
+    <a asp-action="Index" asp-route-search="@activeSearch"
+       class="btn btn-sm @(current is null ? "btn-success" : "btn-outline-success")">
         Todos
     </a>
-    <a asp-action="Index" asp-route-status="@MatchStatus.Scheduled"
-           class="btn btn-sm @(current == MatchStatus.Scheduled ? "btn-success" : "btn-outline-success")">
+    <a asp-action="Index" asp-route-status="@MatchStatus.Scheduled" asp-route-search="@activeSearch"
+       class="btn btn-sm @(current == MatchStatus.Scheduled ? "btn-success" : "btn-outline-success")">
         Programados
     </a>
-    <a asp-action="Index" asp-route-status="@MatchStatus.InProgress"
-           class="btn btn-sm @(current == MatchStatus.InProgress ? "btn-success" : "btn-outline-success")">
+    <a asp-action="Index" asp-route-status="@MatchStatus.InProgress" asp-route-search="@activeSearch"
+       class="btn btn-sm @(current == MatchStatus.InProgress ? "btn-success" : "btn-outline-success")">
         En juego
     </a>
-    <a asp-action="Index" asp-route-status="@MatchStatus.Finished"
-           class="btn btn-sm @(current == MatchStatus.Finished ? "btn-success" : "btn-outline-success")">
+    <a asp-action="Index" asp-route-status="@MatchStatus.Finished" asp-route-search="@activeSearch"
+       class="btn btn-sm @(current == MatchStatus.Finished ? "btn-success" : "btn-outline-success")">
         Finalizados
     </a>
 </div>
- 
+
 <h2 class="mb-4">⚽ Cartelera de partidos</h2>
- 
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <div class="fs-1 mb-2">🔎</div>
+        @if (activeSearch is not null)
+        {
+            <p class="fs-5 mb-1">No hay partidos para “@search”</p>
+            if (current.HasValue)
+            {
+                <p class="text-muted">Prueba con otro equipo o quita el filtro de estado.</p>
+            }
+            else
+            {
+                <p class="text-muted">Revisa el nombre del equipo e inténtalo de nuevo.</p>
+            }
+        }
+        else
+        {
+            <p class="fs-5 mb-1">No hay partidos para este filtro</p>
+        }
+        @* No route values: goes back to the full board (clears search and status) *@
+        <a asp-action="Index" class="btn btn-outline-success mt-2">Volver a la cartelera de partidos</a>
+    </div>
+}
+
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
     @foreach (var match in Model)
     {
@@ -53,7 +94,7 @@
                             break;
                     }
                 </div>
- 
+
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center text-center">
                         <div class="w-100">
@@ -61,7 +102,7 @@
                                  alt="@match.HomeTeamName" width="60" height="60" class="mb-1" />
                             <div class="fw-bold small">@match.HomeTeamName</div>
                         </div>
- 
+
                         <div class="px-3 text-nowrap">
                             @if (match.Status == MatchStatus.Finished)
                             {
@@ -72,7 +113,7 @@
                                 <span class="fs-4 text-muted">vs</span>
                             }
                         </div>
- 
+
                         <div class="w-100">
                             <img src="@(match.AwayTeamCrestUrl ?? "https://placehold.co/60x60/e9ecef/6c757d?text=FC")"
                                  alt="@match.AwayTeamName" width="60" height="60" class="mb-1" />
@@ -80,7 +121,7 @@
                         </div>
                     </div>
                 </div>
- 
+
                 <div class="card-footer">
                     <div class="row g-2 text-center">
                         <div class="col">
@@ -103,7 +144,7 @@
                         </div>
                     </div>
                     <a asp-action="Detail" asp-route-id="@match.Id"
-                           class="btn btn-sm btn-outline-secondary w-100 mt-2">
+                       class="btn btn-sm btn-outline-secondary w-100 mt-2">
                         Ver detalle
                     </a>
                 </div>
