@@ -12,6 +12,10 @@ namespace GolBet.Entities;
 
 
 
+public string UserId { get; set; } = null!;   // FK -> AspNetUsers (string PK) 
+
+public AppUser User { get; set; } = null!;    // navigation property 
+
 public class Bet : AuditableEntity
 
 {

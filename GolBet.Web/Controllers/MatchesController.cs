@@ -6,7 +6,9 @@ using GolBet.Services.DTOs;
 using GolBet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;   // SelectList 
+using Microsoft.AspNetCore.Authorization;
 
+using GolBet.Repositories.Data;
 
 
 private readonly ITeamService _teamService;
@@ -15,6 +17,7 @@ private readonly ITeamService _teamService;
 
 // GET /Matches/Create 
 
+[Authorize(Roles = DbSeeder.AdminRole)]
 public async Task<IActionResult> Create()
 
 {
