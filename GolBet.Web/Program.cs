@@ -7,11 +7,11 @@ using GolBet.Services.Interfaces;
 using GolBet.Services.Mapping;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-
+using Serilog;
 using (var scope = app.Services.CreateScope())
 
 {
-
+    var builder = WebApplication.CreateBuilder(args);
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -23,6 +23,10 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(context, roleManager, userManager);
 
 }
+
+builder.Host.UseSerilog((context, config) =>
+
+    config.ReadFrom.Configuration(context.Configuration));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +90,40 @@ app.UseAuthentication();   // who are you?  (reads the cookie, builds User)
 app.UseAuthorization();    // may you do this?  (evaluates [Authorize]) 
 
 var app = builder.Build();
+
+// Unhandled exceptions (500): friendly page in production, 
+
+// full yellow stack trace while developing 
+
+if (!app.Environment.IsDevelopment())
+
+{
+
+    app.UseExceptionHandler("/Error/General");
+
+}
+
+
+
+// Status codes without a body (404 and friends): re-execute 
+
+// the pipeline against our ErrorController 
+
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
+
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
+app.UseSerilogRequestLogging();
+
+app.UseRouting();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 // Seed the database on startup
 using (var scope = app.Services.CreateScope())
